@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "80193140086",
+    "project_id": "reminderapp-43cff",
+    "storage_bucket": "reminderapp-43cff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:80193140086:android:8c1263d7957d37a846f657",
+        "android_client_info": {
+          "package_name": "com.udacity.project4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "80193140086-2f0jbr5sbcvg93v1ntreinh6housgv38.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCObFxIqNV4u_YwkOw6I9z_srqV4P11lKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "80193140086-2f0jbr5sbcvg93v1ntreinh6housgv38.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
