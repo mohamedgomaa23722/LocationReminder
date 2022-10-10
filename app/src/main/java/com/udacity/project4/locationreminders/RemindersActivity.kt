@@ -7,21 +7,14 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
+
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+
 import androidx.navigation.fragment.NavHostFragment
-import com.google.android.material.snackbar.Snackbar
-import com.udacity.project4.BuildConfig
+
 import com.udacity.project4.R
-import com.udacity.project4.authentication.AuthenticationActivity
-import com.udacity.project4.utils.BACKGROUND_LOCATION_PERMISSION_INDEX
-import com.udacity.project4.utils.LOCATION_PERMISSION_INDEX
-import com.udacity.project4.utils.REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-import com.udacity.project4.utils.REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+
 import kotlinx.android.synthetic.main.activity_reminders.*
 
 /**

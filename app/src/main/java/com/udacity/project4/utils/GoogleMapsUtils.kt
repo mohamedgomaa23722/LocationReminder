@@ -20,12 +20,11 @@ class GoogleMapsUtils(private val context:Context, private val map: GoogleMap) {
     var lastMarker:Marker? = null
     var PoiText:String? =null
 
-    fun enableLocationSelection(isSelected:Boolean){
-        if (isSelected){
-            setMapLongClick(map)
-            setPoiClick(map)
-        }
-    }
+   init {
+       setMapLongClick(map)
+       setPoiClick(map)
+       setMapStyle(map)
+   }
 
     private fun setMapLongClick(map: GoogleMap) {
         map.setOnMapLongClickListener { latLng ->

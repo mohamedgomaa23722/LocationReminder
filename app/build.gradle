@@ -135,4 +135,5 @@ dependencies {
     // Also add the dependency for the Google Play services library and specify its version
     implementation 'com.google.android.gms:play-services-auth:20.3.0'
     implementation 'com.firebaseui:firebase-ui-auth:8.0.2'
+    implementation 'androidx.work:work-runtime-ktx:2.7.0'
 }

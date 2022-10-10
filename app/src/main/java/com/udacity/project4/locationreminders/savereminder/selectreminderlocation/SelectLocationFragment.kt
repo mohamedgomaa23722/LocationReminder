@@ -60,27 +60,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
     private lateinit var mapsUtils: GoogleMapsUtils
-    private lateinit var permissionsUtils: PermissionsUtils
-
-    private val resolutionForResult =
-        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { activityResult ->
-            if (activityResult.resultCode == RESULT_OK) {
-                // We don't rely on the result code, but just check the location setting again
-                checkDeviceLocationSettingsAndStartGeofence(false)
-                enableMyLocation()
-                binding.ConfirmLocation.visibility = View.VISIBLE
-            } else {
-                Snackbar.make(
-                    binding.parentActivity,
-                    R.string.permission_denied_explanation,
-                    Snackbar.LENGTH_INDEFINITE
-                )
-                    .setAction(android.R.string.ok) {
-                        checkPermissionsAndStartGeofencing()
-                    }.show()
-                binding.ConfirmLocation.visibility = View.INVISIBLE
-            }
-        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -115,28 +94,24 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             if (mapsUtils.lastMarker != null) {
                 //          Done:send back the selected location details to the view model
                 //Set Lat and long
-                if (mapsUtils.PoiText == null){
+                if (mapsUtils.PoiText == null) {
                     _viewModel.reminderSelectedLocationStr.value =
                         getString(R.string.lat_long_snippet).format(
                             mapsUtils.lastMarker!!.position.latitude,
                             mapsUtils.lastMarker!!.position.longitude
 
                         )
-                } else{
+                } else {
                     _viewModel.reminderSelectedLocationStr.value = mapsUtils.PoiText
                 }
                 _viewModel.longitude.value = mapsUtils.lastMarker!!.position.longitude
                 _viewModel.latitude.value = mapsUtils.lastMarker!!.position.latitude
                 //     Done:   and navigate back to the previous fragment to save the reminder and add the geofence
                 it.findNavController().popBackStack()
-            } else
-                Toast.makeText(
-                    context,
-                    getString(R.string.err_select_location),
-                    Toast.LENGTH_LONG
-                ).show()
+            } else{
+                _viewModel.showToast.value = getString(R.string.err_select_location)
+            }
         }
-//        _viewModel.reminderSelectedLocationStr.value =
     }
 
 
@@ -148,8 +123,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(mMap: GoogleMap) {
         map = mMap
         mapsUtils = GoogleMapsUtils(requireContext(), map)
-        mapsUtils.setMapStyle(map)
-        mapsUtils.autoZoomToUserLocation(map)
+        enableMyLocation()
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
@@ -174,105 +148,41 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
 
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+        grantResults: IntArray) {
         // Check if location permissions are granted and if so enable the
         // location data layer.
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (
-            grantResults.isEmpty() ||
-            grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
-            (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
-                    grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                    PackageManager.PERMISSION_DENIED)
-        ) {
-            Snackbar.make(
-                binding.parentActivity,
-                R.string.permission_denied_explanation,
-                Snackbar.LENGTH_INDEFINITE
-            )
-                .setAction(R.string.settings) {
-                    startActivity(Intent().apply {
-                        action = ACTION_APPLICATION_DETAILS_SETTINGS
-                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    })
-                }.show()
-        }else{
-            checkPermissionsAndStartGeofencing()
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                enableMyLocation()
+            }
         }
     }
-
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
-        if (permissionsUtils.checkAllPermissions()) {
+        if (isPermissionGranted()) {
             map.isMyLocationEnabled = true
-            mapsUtils.enableLocationSelection(true)
-            mapsUtils.autoZoomToUserLocation(map)
         }
-    }
-
-    private fun checkDeviceLocationSettingsAndStartGeofence(resolve: Boolean = true) {
-        val locationRequest = LocationRequest.create().apply {
-            priority = LocationRequest.PRIORITY_LOW_POWER
-        }
-        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-
-        val settingsClient = LocationServices.getSettingsClient(requireActivity())
-        val locationSettingsResponseTask =
-            settingsClient.checkLocationSettings(builder.build())
-
-        locationSettingsResponseTask.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException && resolve) {
-                // Location settings are not satisfied, but this can be fixed
-                // by showing the user a dialog.
-                try {
-                    // Show the dialog by calling startResolutionForResult(),
-                    // and check the result in onActivityResult().
-
-                    val intentSenderRequest =
-                        IntentSenderRequest.Builder(exception.resolution).build()
-                    resolutionForResult.launch(intentSenderRequest)
-
-                } catch (sendEx: IntentSender.SendIntentException) {
-                    Log.d(TAG, "checkDeviceLocationSettingsAndStartGeofence: ${sendEx.message}")
-                }
-            } else {
-                Snackbar.make(
-                    binding.parentActivity,
-                    R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
-                ).setAction(android.R.string.ok) {
-                    checkDeviceLocationSettingsAndStartGeofence()
-                }.show()
-            }
-        }
-        locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful) {
-                enableMyLocation()
-                mapsUtils.autoZoomToUserLocation(map)
-                Log.d(TAG, "checkDeviceLocationSettingsAndStartGeofence: enable location $map")
-            }
+        else {
+            requestFineLocationPermissions()
         }
     }
 
 
-    override fun onStart() {
-        super.onStart()
-        checkPermissionsAndStartGeofencing()
+    fun requestFineLocationPermissions() {
+        requestPermissions( arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            REQUEST_LOCATION_PERMISSION)
     }
 
-    private fun checkPermissionsAndStartGeofencing() {
-        permissionsUtils = PermissionsUtils(this, requireContext())
-        if (permissionsUtils.checkAllPermissions()) {
-            checkDeviceLocationSettingsAndStartGeofence()
-        } else {
-            permissionsUtils.requestAllPermissions()
-        }
+    private fun isPermissionGranted() : Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
     }
-
+    private val REQUEST_LOCATION_PERMISSION = 1
 }
 

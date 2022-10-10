@@ -62,7 +62,7 @@ class RemindersListViewModelTest {
     }
     @ExperimentalCoroutinesApi
     @Test
-    fun invalidateData_ReturnError()= runBlockingTest{
+    fun invalidateAllData_ReturnError()= runBlockingTest{
         //Given No reminder with error and load Reminders
         dataSource.setReturnError(true)
         remindersListViewModel.loadReminders()
@@ -70,6 +70,7 @@ class RemindersListViewModelTest {
         MatcherAssert.assertThat(remindersListViewModel.showNoData.getOrAwaitValue(),CoreMatchers.`is`(true))
         MatcherAssert.assertThat(remindersListViewModel.showSnackBar.getOrAwaitValue(),CoreMatchers.`is`("Can not fount Reminders"))
      }
+
 
     @ExperimentalCoroutinesApi
     @Test

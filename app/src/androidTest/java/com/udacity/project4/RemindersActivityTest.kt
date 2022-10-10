@@ -5,14 +5,11 @@ import android.os.IBinder
 import android.view.WindowManager
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.Root
 import androidx.test.espresso.action.ViewActions
-
 import androidx.test.espresso.assertion.ViewAssertions.matches
-
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -26,16 +23,11 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.utils.EspressoIdlingResource
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.not
 import org.hamcrest.TypeSafeMatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
@@ -120,6 +112,9 @@ class RemindersActivityTest :
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(activityScenario)
 
+        activityScenario.onActivity {
+
+        }
         //move to save reminder fragment
         onView(withId(R.id.addReminderFAB)).perform(ViewActions.click())
         //Type title
@@ -143,8 +138,9 @@ class RemindersActivityTest :
             .check(matches(isDisplayed()))
         onView(withText(reminder.description))
             .check(matches(isDisplayed()))
-        onView(withText(R.string.reminder_saved)).inRoot(ToastMatcher())
-            .check(matches(isDisplayed()))
+        //Check save reminder snack bar
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText(R.string.reminder_saved)))
         //close scenario
         activityScenario.close()
     }
@@ -161,9 +157,8 @@ class RemindersActivityTest :
         //Click on confirm
         onView(withId(R.id.ConfirmLocation)).perform(ViewActions.click())
         //Then click on save fab button
-        //Then check if error select location is display
-        onView(withText(R.string.err_select_location)).inRoot(ToastMatcher())
-            .check(matches(isDisplayed()))
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText(R.string.err_select_location)))
         //close scenario
         activityScenario.close()
     }
@@ -210,12 +205,13 @@ class RemindersActivityTest :
 
         onView(withId(com.google.android.material.R.id.snackbar_text))
             .check(matches(withText(R.string.err_select_location)))
+
         //close scenario
         activityScenario.close()
     }
 }
 
-class ToastMatcher : TypeSafeMatcher<Root?>() {
+class ToastMatcher : org.junit.internal.matchers.TypeSafeMatcher<Root?>() {
     override fun describeTo(description: org.hamcrest.Description) {
         description.appendText("is toast")
     }
@@ -223,8 +219,8 @@ class ToastMatcher : TypeSafeMatcher<Root?>() {
     override fun matchesSafely(item: Root?): Boolean {
         val type: Int = item?.windowLayoutParams?.get()?.type!!
         if (type == WindowManager.LayoutParams.TYPE_TOAST) {
-            val windowToken: IBinder = item.getDecorView().getWindowToken()
-            val appToken: IBinder = item.getDecorView().getApplicationWindowToken()
+            val windowToken: IBinder = item.decorView.windowToken
+            val appToken: IBinder = item.decorView.applicationWindowToken
             if (windowToken === appToken) {
                 //means this window isn't contained by any other windows.
                 return true

@@ -32,7 +32,7 @@ class GeoFenceUtils(
         geofencingClient = LocationServices.getGeofencingClient(context)
         geofencingClient.addGeofences(requestGeoFence(), createPendingIntent())
             .addOnSuccessListener {
-                Log.d(TAG, "Geofence Added")
+                Log.d("TAG", "Geofence Added")
             }
             .addOnFailureListener { e ->
                 Toast.makeText(
@@ -40,7 +40,7 @@ class GeoFenceUtils(
                     "Please give background location permission",
                     Toast.LENGTH_LONG
                 ).show()
-                Log.d(TAG, context.getString(R.string.geofence_not_available))
+                Log.d("TAG", context.getString(R.string.geofence_not_available))
             }
     }
 
@@ -61,22 +61,20 @@ class GeoFenceUtils(
             .build()
     }
 
-    private val runningInQOrAbove = Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.Q
-
+    @SuppressLint("UnspecifiedImmutableFlag")
     private fun createPendingIntent(): PendingIntent {
 
         val intent = Intent(context, GeofenceBroadcastReceiver::class.java)
         intent.action = ACTION_GEOFENCE_EVENT
+       return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 
-       return if (runningInQOrAbove) {
-            PendingIntent.getBroadcast(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_IMMUTABLE
-            )
-        } else {
+               PendingIntent.getBroadcast(
+                   context,
+                   0,
+                   intent,
+                   PendingIntent.FLAG_MUTABLE
+               )
+       } else {
             PendingIntent.getBroadcast(
                 context,
                 0,

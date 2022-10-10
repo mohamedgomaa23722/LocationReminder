@@ -19,7 +19,6 @@ import com.udacity.project4.locationreminders.geofence.GeofenceTransitionsJobInt
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
 //Done: implement the onReceive method to receive the geofencing events at the background
-        Toast.makeText(context, "received work", Toast.LENGTH_SHORT).show()
         enqueueWork(context, intent)
     }
 }
